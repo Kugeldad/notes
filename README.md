@@ -54,8 +54,8 @@ Raden med 👥 skrivs bara när personerna har ändrats från standard. Rader so
 ## NWO
 
 Håll koll på beställningar. En anteckning kan hålla flera beställningar från olika ställen, var och en med
-**Företag**, en eller flera **Varor**, **Fraktbolag**, **Beställd**, **Skickad**, **Bedömt levdatum**,
-**Redo att hämtas** med **Hämtställe**, och **Levererad**.
+**Företag**, en eller flera **Varor**, **Fraktbolag**, **Trackingnummer**, **Beställd**, **Skickad**,
+**Bedömt levdatum**, **Redo att hämtas** med **Hämtställe**, **Levererad** och **Kommentar**.
 
 - Beställningarna visas som en lista. Varje rad visar varorna, företag, fraktbolag och hämtställe, och till höger
   det senaste steget: levererad, redo att hämtas, bedömt levdatum med hur många dagar det är kvar, skickad
@@ -74,6 +74,9 @@ Håll koll på beställningar. En anteckning kan hålla flera beställningar fr�
 - **Ta bort beställning** frågar en gång till (*Tryck igen för att ta bort*). En tom beställning tas bort direkt.
 - Varor: **Lägg till vara** ger en ny rad, och Enter på en vara med text gör samma sak. Enter på en tom rad
   går vidare till Fraktbolag. Krysset tar bort varan. Tomma rader sparas inte.
+- **Trackingnummer** står under Fraktbolag, i fast teckenbredd så att det är lätt att läsa av.
+- **Kommentar** står sist och kan ha flera rader; fältet växer med texten. Första raden syns kursivt i den
+  ihopfällda raden i listan.
 - **Redo att hämtas:** fyll i datumet (eller tryck **Idag**) när paketet har kommit till en box eller ett
   utlämningsställe, och skriv var i **Hämtställe**. Raden visar *Redo att hämtas*
   och hur länge paketet har väntat. Bocka av beställningen när den är hämtad.
@@ -104,22 +107,26 @@ Företag: Webbutiken
 Vara: Skruvdragare ✅ 2026-10-29
 Vara: Bitsats
 Fraktbolag: PostNord
+Trackingnummer: 00370712345678901234
 Beställd: 2026-10-27
 Skickad:
 Bedömt levdatum: 2026-11-03
 Redo att hämtas: 2026-10-30
 Hämtställe: Paketboxen vid stationen
 Levererad:
+Kommentar: Bitsatsen kommer i ett eget paket
 
 Företag: Begagnatsajten
 Vara: Vinterjacka ✅ 2026-10-28
 Fraktbolag: Budbee
+Trackingnummer:
 Beställd: 2026-10-25
 Skickad: 2026-10-26
 Bedömt levdatum: 2026-10-30
 Redo att hämtas:
 Hämtställe:
 Levererad: 2026-10-28
+Kommentar:
 ```
 
 Kanske-listan sparas som ett eget block med en `Kanske:`-rad per sak, efter beställningarna:
@@ -128,6 +135,8 @@ Kanske-listan sparas som ett eget block med en `Kanske:`-rad per sak, efter best
 Kanske: Vinterdäck
 Kanske: Ny lampa till hallen
 ```
+
+En kommentar med flera rader sparas som en `Kommentar:`-rad per rad (tomma rader sparas inte).
 
 Skriver man `Levererad: datum` för hand i en annan editor räknas alla varor i beställningen som levererade.
 

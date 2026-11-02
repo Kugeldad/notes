@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>NWO (jagemyr)</title>
-  <link rel="stylesheet" href="nwo.css?v=2.6.1">
+  <link rel="stylesheet" href="nwo.css?v=2.7.0">
 </head>
 <body>
   <main class="page">
@@ -60,6 +60,7 @@
           <span class="s-main">
             <span class="s-title"></span>
             <span class="s-meta"></span>
+            <span class="s-note"></span>
           </span>
           <span class="s-status">
             <span class="s-top"></span>
@@ -92,6 +93,11 @@
           <input type="text" data-key="fraktbolag" aria-label="Fraktbolag" autocomplete="off" autocapitalize="sentences" enterkeyhint="next">
           <div class="carriers"></div>
         </div>
+
+        <label class="field">
+          <span>Trackingnummer</span>
+          <input type="text" class="tracking" data-key="tracking" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="next">
+        </label>
 
         <div class="field" data-date-field="bestalld">
           <span>Beställd</span>
@@ -137,6 +143,11 @@
           <input type="text" data-key="hamtstalle" placeholder="Box eller utlämningsställe" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
         </label>
 
+        <label class="field">
+          <span>Kommentar</span>
+          <textarea data-key="kommentar" rows="2" placeholder="T.ex. returnera om fel storlek" autocapitalize="sentences"></textarea>
+        </label>
+
         <p class="delivered-note" hidden></p>
 
         <div class="d-actions">
@@ -167,7 +178,7 @@
     </li>
   </template>
 
-  <script src="vendor/component-relay.js?v=2.6.1"></script>
-  <script src="nwo.js?v=2.6.1"></script>
+  <script src="vendor/component-relay.js?v=2.7.0"></script>
+  <script src="nwo.js?v=2.7.0"></script>
 </body>
 </html>

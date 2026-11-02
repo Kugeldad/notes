@@ -109,6 +109,18 @@ button, input { font: inherit; color: inherit; }
 .s-meta { font-size: 0.8em; color: var(--muted); }
 .s-meta:empty { display: none; }
 
+/* Kommentarens första rad i den ihopfällda raden. */
+.s-note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8em;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.s-note:empty { display: none; }
+
 .s-status {
   flex: none;
   display: grid;
@@ -385,6 +397,33 @@ button, input { font: inherit; color: inherit; }
 .field input:not([type="checkbox"]):focus { border-color: var(--accent); }
 .field input:not([type="checkbox"]):disabled { opacity: 0.6; }
 .field input[readonly] { cursor: default; }
+
+/* Kommentar: flera rader, växer med texten. */
+.field textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--field-bg);
+  font: inherit;
+  line-height: 1.4;
+  color: inherit;
+  resize: none;
+  overflow: hidden;
+  outline: none;
+}
+
+.field textarea:focus { border-color: var(--accent); }
+.field textarea[readonly] { cursor: default; }
+.field textarea::placeholder { color: var(--muted); opacity: 0.7; }
+
+/* Trackingnummer: lättare att läsa av och jämföra i fast teckenbredd. */
+.field input.tracking {
+  font-family: var(--sn-stylekit-monospace-font, ui-monospace, Menlo, Consolas, monospace);
+  letter-spacing: 0.02em;
+}
 
 /* Tomt datumfält: gör platshållaren lika dämpad som i textfälten. */
 .field input[type="date"].empty { color: var(--muted); }

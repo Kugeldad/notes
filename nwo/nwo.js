@@ -11,12 +11,14 @@
  *   Vara: Skruvdragare ✅ 2026-10-29
  *   Vara: Bitsats
  *   Fraktbolag: PostNord
+ *   Trackingnummer: 00370712345678901234
  *   Beställd: 2026-10-27
  *   Skickad:
  *   Bedömt levdatum: 2026-11-03
  *   Redo att hämtas:
  *   Hämtställe:
  *   Levererad:
+ *   Kommentar: Returnera om fel storlek
  *
  * Rader som inte är fält (t.ex. något som skrivits i en annan editor) ligger kvar
  * oförändrade: i sin beställning om de står i ett block med fält, annars sist.
@@ -24,7 +26,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '2.6.1';
+  var VERSION = '2.7.0';
   var NOT_CONNECTED_HINT_MS = 2500;
   var CONFIRM_MS = 3000;
   var SETTLE_MS = 700;
@@ -46,6 +48,7 @@
     // multi: en rad per vara.
     { key: 'vara', label: 'Vara', multi: true, aliases: ['vara', 'varor'] },
     { key: 'fraktbolag', label: 'Fraktbolag', aliases: ['fraktbolag', 'frakt'] },
+    { key: 'tracking', label: 'Trackingnummer', aliases: ['trackingnummer', 'trackingnumber', 'tracking', 'spårningsnummer', 'spårning', 'kollinummer', 'kolli-id', 'sändningsnummer', 'sändnings-id'] },
     { key: 'bestalld', label: 'Beställd', aliases: ['beställd', 'bestalld', 'beställt', 'beställning', 'beställningsdatum', 'orderdatum'] },
     { key: 'skickad', label: 'Skickad', aliases: ['skickad', 'skickat', 'skickades', 'skickat datum', 'avsänd'] },
     // late: ett passerat datum visas i rött (leveransen borde ha kommit).
@@ -53,7 +56,9 @@
     // Paketet har kommit till en box eller ett utlämningsställe.
     { key: 'hamtas', label: 'Redo att hämtas', aliases: ['redo att hämtas', 'redo att hamtas', 'kan hämtas', 'att hämta', 'hämtas', 'ankommen', 'ankommet'] },
     { key: 'hamtstalle', label: 'Hämtställe', aliases: ['hämtställe', 'hamtstalle', 'utlämningsställe', 'uthämtningsställe', 'utlämning', 'ombud', 'paketbox', 'box'] },
-    { key: 'levererad', label: 'Levererad', aliases: ['levererad', 'levererat', 'mottagen', 'mottaget', 'hämtad', 'hämtat'] }
+    { key: 'levererad', label: 'Levererad', aliases: ['levererad', 'levererat', 'mottagen', 'mottaget', 'hämtad', 'hämtat'] },
+    // lines: flera rader text, sparade som en Kommentar-rad per rad.
+    { key: 'kommentar', label: 'Kommentar', lines: true, aliases: ['kommentar', 'kommentarer', 'anteckning', 'notering', 'not'] }
   ];
 
   // Statusen i listan visar det senaste steget som är ifyllt (levererad visas för sig).
@@ -271,8 +276,8 @@
           return;
         }
         var value = m[2].trim();
-        // Samma fält igen utan tom rad emellan: en ny beställning börjar (utom för varor).
-        if (current && seen[field.key] && !field.multi) current = null;
+        // Samma fält igen utan tom rad emellan: en ny beställning börjar (utom för varor och kommentarer).
+        if (current && seen[field.key] && !field.multi && !field.lines) current = null;
         if (!current) {
           current = emptyOrder();
           seen = {};
@@ -282,6 +287,9 @@
         if (field.multi) {
           var item = parseItem(value);
           if (item.text || item.done) current.values[field.key].push(item);
+        } else if (field.lines) {
+          var prev = current.values[field.key];
+          if (value) current.values[field.key] = prev ? prev + '\n' + value : value;
         } else {
           current.values[field.key] = value;
         }
@@ -308,7 +316,9 @@
     var blocks = filled.map(function (order) {
       var lines = [];
       FIELDS.forEach(function (f) {
-        var values = f.multi ? filledItems(order).map(serializeItem) : [oneLine(order.values[f.key])];
+        var values = f.multi ? filledItems(order).map(serializeItem)
+          : f.lines ? textLines(order.values[f.key])
+          : [oneLine(order.values[f.key])];
         if (!values.length) values = [''];
         values.forEach(function (v) { lines.push(f.label + ':' + (v ? ' ' + v : '')); });
       });
@@ -324,6 +334,11 @@
   /** Raderna i Kanske som har text. */
   function filledMaybe(maybe) {
     return (maybe || state.maybe).map(oneLine).filter(Boolean);
+  }
+
+  /** Raderna i ett flerradigt fält, utan tomma rader. */
+  function textLines(value) {
+    return String(value || '').split('\n').map(function (line) { return line.trim(); }).filter(Boolean);
   }
 
   function oneLine(value) {
@@ -617,7 +632,8 @@
    */
   function onInput(event) {
     var input = event.target;
-    if (input.tagName !== 'INPUT' || input.type === 'checkbox' || !editable()) return;
+    var isField = input.tagName === 'INPUT' || input.tagName === 'TEXTAREA';
+    if (!isField || input.type === 'checkbox' || !editable()) return;
     var card = input.closest('.order');
     var order = state.orders[orderIndex(input)];
     if (!order) return;
@@ -638,6 +654,7 @@
         renderDateBlock(card.querySelector('[data-date-field="' + key + '"]'), order, true);
       }
       if (key === 'fraktbolag') renderCarriers(card, order, true);
+      if (input.tagName === 'TEXTAREA') autoGrow(input);
     }
     renderSummary(card, order, true);
     renderCount();
@@ -1221,7 +1238,7 @@
     card.querySelector('.details').hidden = !expanded;
     renderSummary(card, order, canEdit);
 
-    Array.prototype.forEach.call(card.querySelectorAll('input[data-key]'), function (input) {
+    Array.prototype.forEach.call(card.querySelectorAll('input[data-key], textarea[data-key]'), function (input) {
       var value = order.values[input.getAttribute('data-key')] || '';
       if (input.type === 'date') {
         // Datumväljaren kan bara visa ÅÅÅÅ-MM-DD; annan text står kvar i anteckningen och visas under fältet.
@@ -1233,6 +1250,7 @@
         if (input.value !== value) input.value = value;
         setFlag(input, 'disabled', !state.note);
         setFlag(input, 'readOnly', state.locked);
+        if (input.tagName === 'TEXTAREA' && expanded) autoGrow(input);
       }
     });
 
@@ -1281,7 +1299,17 @@
     }
     if (!delivered && doneItems > 0) meta.push(doneItems + ' av ' + total + ' levererade');
     card.querySelector('.s-meta').textContent = meta.filter(Boolean).join(' · ');
+    // Kommentarens första rad syns i den ihopfällda raden.
+    var comment = textLines(order.values.kommentar);
+    var note = card.querySelector('.s-note');
+    note.textContent = comment.length ? comment[0] + (comment.length > 1 ? ' …' : '') : '';
     renderStatus(card, order, delivered);
+  }
+
+  /** Kommentarsfältet växer med texten i stället för att få en egen rullist. */
+  function autoGrow(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 2 + 'px';
   }
 
   function renderStatus(card, order, delivered) {
