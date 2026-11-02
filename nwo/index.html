@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>NWO (jagemyr)</title>
-  <link rel="stylesheet" href="nwo.css?v=2.8.0">
+  <link rel="stylesheet" href="nwo.css?v=2.9.0">
 </head>
 <body>
   <main class="page">
@@ -48,6 +48,10 @@
     <span id="count">0 beställningar</span>
     <span class="status-right">
       <span id="save-state" class="save-state">Väntar på Standard Notes…</span>
+      <button type="button" class="eink-toggle" id="eink-toggle" aria-pressed="false" title="E-ink-läge: svart och vitt, för e-ink-skärmar">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>
+        E-ink
+      </button>
       <span class="version" id="version" title="Version av pluginet på den här enheten"></span>
     </span>
   </footer>
@@ -182,7 +186,7 @@
     </li>
   </template>
 
-  <script src="vendor/component-relay.js?v=2.8.0"></script>
-  <script src="nwo.js?v=2.8.0"></script>
+  <script src="vendor/component-relay.js?v=2.9.0"></script>
+  <script src="nwo.js?v=2.9.0"></script>
 </body>
 </html>

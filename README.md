@@ -63,6 +63,13 @@ Håll koll på beställningar. En anteckning kan hålla flera beställningar fr�
 - Tryck på en beställning för att fälla ut den och ändra fälten. **Klar** fäller ihop den igen.
   En anteckning med bara en beställning visas utfälld direkt.
 - **Ny beställning** lägger till en beställning sist i listan.
+- **E-ink-läge:** knappen **E-ink** bredvid versionen längst ner gör pluginet svart och vitt för e-ink-skärmar
+  (som i Te): svarta ramar, vita fält, inga animationer eller genomskinlighet. Lägesfärgerna blir en svart kant
+  till vänster: tunn för beställd, mellan för skickad och tjock för redo att hämtas, och *Redo att hämtas* står
+  inverterat. Försenade datum stryks under. Valet gäller den här enheten och sparas både i localStorage och i
+  pluginets data i Standard Notes under en nyckel per enhet (telefonen tömmer localStorage). Utan val slås läget
+  på av sig självt på svartvita skärmar och Mudita-telefoner. Under 400 px bredd blir marginalerna mindre och
+  pilen på raderna försvinner.
 - **Kanske:** under beställningarna finns en lista för saker du kanske ska beställa. Skriv i fältet och tryck
   Enter eller **Lägg till**; raderna går att ändra direkt och krysset tar bort. **Beställ** gör raden till en ny
   beställning med saken som vara och dagens datum som Beställd, och fäller ut den så att du kan fylla i resten.

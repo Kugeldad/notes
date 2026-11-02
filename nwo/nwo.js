@@ -26,7 +26,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '2.8.0';
+  var VERSION = '2.9.0';
   var NOT_CONNECTED_HINT_MS = 2500;
   var CONFIRM_MS = 3000;
   var SETTLE_MS = 700;
@@ -103,6 +103,7 @@
     template: document.getElementById('order-template'),
     itemTemplate: document.getElementById('item-template'),
     count: document.getElementById('count'),
+    einkToggle: document.getElementById('eink-toggle'),
     saveState: document.getElementById('save-state')
   };
 
@@ -519,6 +520,100 @@
   // Versionen längst ner till höger, så att man ser vilken version varje enhet kör.
   document.getElementById('version').textContent = 'v' + VERSION;
 
+  // ---------- Inställningar per enhet (som i Te) ----------
+  //
+  // E-ink-läget sparas per enhet. I Standard Notes på telefonen kan pluginets localStorage
+  // tömmas varje gång anteckningen öppnas, så valet sparas också i pluginets data i Standard
+  // Notes, under en nyckel för just den här enheten. Ett val på telefonen påverkar då inte
+  // datorn, och tvärtom.
+
+  var PREFS_KEY = 'devicePrefs';
+  var DEVICE = deviceKey();
+
+  /** "Linux; Android 14; Kompakt; wv 480x800": modell och skärm, utan versionsnummer. */
+  function deviceKey() {
+    var ua = navigator.userAgent || '';
+    var m = /\(([^)]*)\)/.exec(ua);
+    var model = (m ? m[1] : ua.slice(0, 80))
+      .replace(/Build\/[^;)]*/g, '')
+      .replace(/\d+(?:[._]\d+)+/g, '')
+      .replace(/\s*;\s*/g, '; ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    var w = 0, h = 0;
+    try { w = Math.min(screen.width, screen.height); h = Math.max(screen.width, screen.height); } catch (e) { /* okänt */ }
+    return model + ' ' + w + 'x' + h;
+  }
+
+  /** Den här enhetens inställningar i pluginets data i Standard Notes (före anslutning: inga). */
+  function devicePrefs() {
+    try {
+      var all = relay && relay.getComponentDataValueForKey(PREFS_KEY);
+      return (all && all[DEVICE]) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function loadPref(key) {
+    var local = null;
+    try { local = window.localStorage.getItem(key); } catch (e) { /* ingen lagring */ }
+    if (local !== null) return local;
+    var saved = devicePrefs()[key];
+    return saved === undefined ? null : saved;
+  }
+
+  function storePref(key, value) {
+    try {
+      if (value) window.localStorage.setItem(key, value); else window.localStorage.removeItem(key);
+    } catch (e) {
+      // Ingen lagring här; Standard Notes sparar nedan.
+    }
+    try {
+      if (!relay || !state.connected) return;
+      var all = {};
+      var current = relay.getComponentDataValueForKey(PREFS_KEY) || {};
+      Object.keys(current).forEach(function (k) { all[k] = current[k]; });
+      var mine = {};
+      Object.keys(all[DEVICE] || {}).forEach(function (k) { mine[k] = all[DEVICE][k]; });
+      if (value) mine[key] = value; else delete mine[key];
+      all[DEVICE] = mine;
+      relay.setComponentDataValueForKey(PREFS_KEY, all);
+    } catch (e) {
+      // Kan inte spara i Standard Notes; valet gäller tills editorn stängs.
+    }
+  }
+
+  // ---------- E-ink-läge ----------
+  //
+  // Svart och vitt, ramar i stället för färger och tonade bakgrunder, inga animationer.
+  // Lägesfärgerna (grå, blå, grön) blir kanter av olika tjocklek. Väljs per enhet med
+  // knappen i statusraden; utan val slås det på av sig självt på svartvita skärmar och
+  // Mudita-telefoner.
+
+  var EINK_KEY = 'se.jagemyr.nwo.eink';
+
+  function applyEink(on) {
+    document.documentElement.classList.toggle('eink', on);
+    el.einkToggle.setAttribute('aria-pressed', String(on));
+  }
+
+  /** Sparat val, annars på för svartvita skärmar och Mudita-telefoner. */
+  function initEink() {
+    var stored = loadPref(EINK_KEY);
+    var auto = /Mudita|Kompakt/i.test(navigator.userAgent || '');
+    try { auto = auto || window.matchMedia('(monochrome)').matches; } catch (e) { /* okänt */ }
+    applyEink(stored === '1' || (stored === null && auto));
+  }
+
+  initEink();
+
+  el.einkToggle.addEventListener('click', function () {
+    var on = !document.documentElement.classList.contains('eink');
+    storePref(EINK_KEY, on ? '1' : '0');
+    applyEink(on);
+  });
+
   var relay = new ComponentRelay({
     targetWindow: window,
     options: { coallesedSaving: true, coallesedSavingDelay: 250 },
@@ -526,6 +621,10 @@
       state.connected = true;
       el.notice.hidden = true;
       setSaveState('', '');
+      // Pluginets data kan saknas första gången; då börjar den tom.
+      try { if (!relay.component.data) relay.component.data = {}; } catch (e) { /* okänt */ }
+      // Nu finns pluginets data: läs e-ink-valet därifrån om localStorage var tomt.
+      initEink();
     }
   });
 
