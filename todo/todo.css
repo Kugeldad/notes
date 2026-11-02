@@ -521,6 +521,107 @@ button, input, select { font: inherit; color: inherit; }
   color: inherit;
 }
 
+/* ---------- Dra och släpp ---------- */
+
+/* Strecket och ramen räknas i listans innehåll. */
+.lists { position: relative; }
+
+.drag-handle {
+  flex: none;
+  align-self: stretch;
+  width: 40px;
+  min-height: 44px;
+  margin-right: -4px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: grab;
+  /* Fingret drar uppgiften i stället för att skrolla listan. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.subtask .drag-handle { min-height: 36px; }
+.drag-handle:hover { color: var(--fg); }
+.drag-handle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+body.is-dragging,
+body.is-dragging .drag-handle {
+  cursor: grabbing;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Uppgiften som dras står kvar tonad på sin plats tills den släpps. */
+.task.drag-source > .row,
+.task.drag-source > .note-text,
+.task.drag-source > .subtasks { opacity: 0.35; }
+
+/* En kopia av titeln följer fingret (inte i e-ink-läget). */
+.drag-ghost {
+  position: fixed;
+  z-index: 20;
+  pointer-events: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.95;
+}
+
+/* Strecket där uppgiften hamnar; med etikett när den blir deluppgift. */
+.drop-line {
+  position: absolute;
+  z-index: 21;
+  right: max(var(--gutter), env(safe-area-inset-right));
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.drop-line::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -3.5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.drop-line.nest::after {
+  content: "Deluppgift";
+  position: absolute;
+  right: 0;
+  bottom: 5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Uppgiften som den dragna blir deluppgift i. */
+.task.drop-into > .row {
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
 /* ---------- E-ink-knappen ---------- */
 
 /*
@@ -570,6 +671,7 @@ button, input, select { font: inherit; color: inherit; }
   .details { padding-left: calc(48px + env(safe-area-inset-left)); }
   .subtasks { padding-left: calc(36px + env(safe-area-inset-left)); }
   .subtask .details { padding-left: 36px; }
+  .drag-handle { width: 34px; }
 
   .filters { gap: 5px; }
   .chip { padding: 0 7px; }
@@ -671,3 +773,14 @@ html.eink .note-text { color: #000; }
 
 /* Textknappar understrukna, så att de syns som knappar utan färg. */
 html.eink .link-btn { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Dra och släpp: inget som rör sig mjukt eller tonas. Den dragna uppgiften får en streckad
+   ram, målet en svart ram och strecket är svart; ingen kopia följer fingret. */
+html.eink .drag-ghost { display: none; }
+html.eink .task.drag-source > .row,
+html.eink .task.drag-source > .note-text,
+html.eink .task.drag-source > .subtasks { opacity: 1; }
+html.eink .task.drag-source > .row { outline: 2px dashed #000; outline-offset: -2px; }
+html.eink .task.drop-into > .row { background: #fff; box-shadow: inset 0 0 0 2px #000; }
+html.eink .drag-handle { color: #000; }
+html.eink .drag-handle:focus-visible { outline-color: #000; }

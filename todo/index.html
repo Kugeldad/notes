@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Todo (jagemyr)</title>
-  <link rel="stylesheet" href="todo.css?v=1.6.0">
+  <link rel="stylesheet" href="todo.css?v=1.7.0">
 </head>
 <body>
   <div class="add" id="add-form">
@@ -41,6 +41,7 @@
     <div class="locked-banner" id="locked-banner" hidden>Anteckningen är låst.</div>
 
     <ul class="list" id="open-list" aria-label="Att göra"></ul>
+    <div class="drop-line" id="drop-line" hidden></div>
     <p class="empty" id="empty" hidden>Inga uppgifter kvar.</p>
 
     <section class="done-section" id="done-section" hidden>
@@ -71,6 +72,9 @@
         <button type="button" class="body" aria-expanded="false">
           <span class="title"></span>
           <span class="meta"></span>
+        </button>
+        <button type="button" class="drag-handle" aria-label="Flytta uppgiften (dra, pil upp och ner, pil höger gör den till deluppgift)" title="Dra för att flytta. Släpp mitt på en annan uppgift för att göra den till deluppgift." hidden>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></g></svg>
         </button>
       </div>
       <p class="note-text" hidden></p>
@@ -121,6 +125,9 @@
           <span class="title"></span>
           <span class="meta"></span>
         </button>
+        <button type="button" class="drag-handle" aria-label="Flytta deluppgiften (dra, pil upp och ner, pil vänster lyfter ut den)" title="Dra för att flytta. Dra ut den bland uppgifterna för att göra den till en egen uppgift." hidden>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></g></svg>
+        </button>
       </div>
       <p class="note-text" hidden></p>
       <div class="details" hidden>
@@ -146,8 +153,8 @@
     </li>
   </template>
 
-  <script src="vendor/component-relay.js?v=1.6.0"></script>
-  <script src="core.js?v=1.6.0"></script>
-  <script src="todo.js?v=1.6.0"></script>
+  <script src="vendor/component-relay.js?v=1.7.0"></script>
+  <script src="core.js?v=1.7.0"></script>
+  <script src="todo.js?v=1.7.0"></script>
 </body>
 </html>

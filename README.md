@@ -34,6 +34,25 @@ Egna plugins till [Standard Notes](https://standardnotes.com), publicerade med G
   En återkommande huvuduppgift nollställer sina deluppgifter när den kommer tillbaka.
 - **Noteringar:** tryck på en uppgift eller deluppgift och skriv i fältet Notering. Noteringen visas under
   uppgiften och sparas som rader som börjar med `>`.
+- **Dra och släpp:** dra i greppet (⋮⋮) längst till höger på raden för att flytta en uppgift. Var den hamnar
+  beror på var fingret (eller musen) är när du släpper:
+  - övre eller nedre delen av en uppgift: före eller efter den,
+  - mitten av en uppgift: som deluppgift i den (sist bland deluppgifterna; i nedre delen av en uppgift som redan
+    har deluppgifter: först),
+  - bland en uppgifts deluppgifter: före eller efter den deluppgift du släpper på.
+
+  Ett streck visar var uppgiften hamnar, och när den blir deluppgift får den andra uppgiften en ram och strecket
+  etiketten *Deluppgift*. En deluppgift som dras ut bland uppgifterna blir en egen uppgift. Det finns bara en nivå:
+  en uppgift som själv har deluppgifter kan flyttas men inte bli deluppgift. Person, datum, upprepning och notering
+  följer med. Huvuduppgifterna räknar om sina framsteg, så en uppgift vars sista öppna deluppgift flyttas bort
+  bockas av. Med ett filter valt flyttas uppgiften bland de som syns; skulle den försvinna ur vyn (en deluppgift
+  utan person som lyfts ut) får den filtrets person, som en ny uppgift. Listan skrollar när man drar mot kanten,
+  och en utfälld uppgift fälls ihop när draget börjar. Klara uppgifter har inget grepp. Ordningen sparas som
+  ordningen i anteckningens text.
+  Med tangentbordet, när greppet har fokus: pil upp och ner flyttar ett steg, pil höger gör uppgiften till
+  deluppgift i uppgiften ovanför och pil vänster lyfter ut en deluppgift. Greppet är egna pekarhändelser och inte
+  HTML5 drag-and-drop, som inte fungerar med fingret i iOS (som i NWO). I e-ink-läget följer ingen kopia av
+  uppgiften fingret; uppgiften som dras får en streckad ram och strecket och ramen är svarta.
 - **E-ink-läge:** knappen **E-ink** bredvid versionen längst ner gör pluginet svart och vitt för e-ink-skärmar
   (som i Te och NWO): svarta ramar, vita fält, inga animationer eller genomskinlighet. Personfärgerna försvinner
   och namnet står i fetstil i stället, den valda personen i filtret står inverterad och försenade datum stryks under.
@@ -41,7 +60,7 @@ Egna plugins till [Standard Notes](https://standardnotes.com), publicerade med G
 - **Inställningar per enhet** (filtret och e-ink) sparas i localStorage och också i pluginets data i Standard Notes,
   under en nyckel för enheten (modell och skärmstorlek). Standard Notes på telefonen tömmer pluginets localStorage
   när anteckningen öppnas; valen läses då därifrån i stället.
-- **Smal skärm:** under 400 px bredd blir marginalerna mindre, och under 360 px står Vem, Upprepas och Datum under
+- **Smal skärm:** under 400 px bredd blir marginalerna och greppet mindre, och under 360 px står Vem, Upprepas och Datum under
   varandra så att valen inte kortas av.
 
 Uppgifterna sparas som vanlig text i anteckningen, en per rad, så de går att läsa även i andra editorer:

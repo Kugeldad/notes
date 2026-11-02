@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.6.0';
+  var VERSION = '1.7.0';
   var C = window.TodoCore;
   var COMPLETE_ANIMATION_MS = 350;
   var CONFIRM_MS = 3000;
@@ -37,7 +37,9 @@
     peopleDone: document.getElementById('people-done'),
     addPersonForm: document.getElementById('add-person'),
     newPerson: document.getElementById('new-person'),
-    einkToggle: document.getElementById('eink-toggle')
+    einkToggle: document.getElementById('eink-toggle'),
+    lists: document.querySelector('.lists'),
+    dropLine: document.getElementById('drop-line')
   };
 
   // Filtret sparas per enhet, så att t.ex. dotterns telefon kan visa bara hennes uppgifter.
@@ -118,7 +120,12 @@
     connected: false,
     filter: loadFilter(),
     people: C.DEFAULT_PEOPLE.slice(),
-    editingPeople: false
+    editingPeople: false,
+    // Uppgifterna i Att göra i visningsordning, och om de går att flytta (se Dra och släpp).
+    openOrder: [],
+    sortable: false,
+    // Pågående drag eller null.
+    drag: null
   };
 
   function loadFilter() {
@@ -565,6 +572,347 @@
     if (!document.hidden) checkNewDay();
   });
 
+  // ---------- Dra och släpp ----------
+  //
+  // Dra i greppet (⋮⋮) längst till höger på raden. Pointer events i stället för HTML5
+  // drag-and-drop, som inte fungerar med fingret i iOS (som i NWO).
+  //
+  // Var uppgiften hamnar avgörs av var fingret är:
+  // - övre eller nedre delen av en uppgift: före eller efter den,
+  // - mitten av en uppgift: som deluppgift sist i den (nedre delen, när uppgiften redan har
+  //   deluppgifter: först bland dem),
+  // - bland en uppgifts deluppgifter: före eller efter deluppgiften fingret är över.
+  // En deluppgift som dras ut bland uppgifterna blir en egen uppgift. Bara en nivå: en
+  // uppgift som själv har deluppgifter kan flyttas men inte bli deluppgift.
+  //
+  // Med tangentbordet, när greppet har fokus: pil upp och ner flyttar ett steg, pil höger gör
+  // uppgiften till deluppgift i uppgiften ovanför och pil vänster lyfter ut en deluppgift.
+
+  var DRAG_THRESHOLD = 5;
+  var AUTOSCROLL_EDGE = 56;
+  var AUTOSCROLL_SPEED = 14;
+  var suppressClickUntil = 0;
+
+  el.openList.addEventListener('pointerdown', function (event) {
+    var handle = event.target.closest('.drag-handle');
+    if (!handle || state.drag || state.locked || !state.note) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    var li = handle.closest('.task');
+    var item = findTask(Number(li.dataset.id));
+    if (!item) return;
+    event.preventDefault();
+    state.drag = {
+      pointerId: event.pointerId,
+      handle: handle,
+      li: li,
+      item: item,
+      // En uppgift med egna deluppgifter kan inte bli deluppgift (bara en nivå).
+      canNest: !(item.subtasks && item.subtasks.length),
+      startX: event.clientX,
+      startY: event.clientY,
+      lastY: event.clientY,
+      started: false,
+      target: null,
+      intoLi: null,
+      ghost: null,
+      raf: 0
+    };
+    try { handle.setPointerCapture(event.pointerId); } catch (e) { /* äldre webbläsare */ }
+  });
+
+  document.addEventListener('pointermove', function (event) {
+    var d = state.drag;
+    if (!d || event.pointerId !== d.pointerId) return;
+    event.preventDefault();
+    d.lastY = event.clientY;
+    if (!d.started) {
+      if (Math.abs(event.clientY - d.startY) < DRAG_THRESHOLD && Math.abs(event.clientX - d.startX) < DRAG_THRESHOLD) return;
+      startDrag();
+    }
+    updateDrag();
+  });
+
+  document.addEventListener('pointerup', function (event) { finishDrag(event, false); });
+  document.addEventListener('pointercancel', function (event) { finishDrag(event, true); });
+
+  // Efter ett drag ska klicket som följer inte fälla ut uppgiften under fingret.
+  document.addEventListener('click', function (event) {
+    if (Date.now() < suppressClickUntil) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  }, true);
+
+  function startDrag() {
+    var d = state.drag;
+    d.started = true;
+    resetClearButton();
+    // En utfälld uppgift fälls ihop, så att listan blir kort och lätt att dra i. Bara
+    // gömd här; listan ritas om när draget är klart.
+    if (state.expandedId !== null) {
+      if (document.activeElement && el.openList.contains(document.activeElement)) document.activeElement.blur();
+      el.openList.querySelectorAll('.details:not([hidden])').forEach(function (x) { x.hidden = true; });
+      state.expandedId = null;
+    }
+    document.body.classList.add('is-dragging');
+    d.li.classList.add('drag-source');
+    var ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.textContent = d.item.title;
+    document.body.appendChild(ghost);
+    d.ghost = ghost;
+    d.raf = requestAnimationFrame(autoScroll);
+  }
+
+  /** Räknar ut var uppgiften skulle hamna och visar det. */
+  function updateDrag() {
+    var d = state.drag;
+    var lists = el.lists.getBoundingClientRect();
+    if (d.ghost) {
+      // Ovanför fingret, så att uppgiften man släpper på syns.
+      d.ghost.style.left = (lists.left + 12) + 'px';
+      d.ghost.style.width = Math.max(120, lists.width - 84) + 'px';
+      d.ghost.style.top = (d.lastY - d.ghost.offsetHeight - 18) + 'px';
+    }
+    d.target = dropTarget(d.lastY);
+    showDropTarget(d.target);
+  }
+
+  function liFor(task) {
+    return el.openList.querySelector('.task[data-id="' + task.id + '"]');
+  }
+
+  function shownSubLis(li) {
+    var ul = li.querySelector('.subtasks');
+    return ul && !ul.hidden ? Array.prototype.slice.call(ul.children) : [];
+  }
+
+  /**
+   * Målet för ett släpp vid y (fönsterkoordinat):
+   *   { type: 'before' | 'after', task }               bland uppgifterna
+   *   { type: 'sub-before' | 'sub-after', parent, sub } bland en uppgifts deluppgifter
+   *   { type: 'nest-start' | 'nest-end', parent }       som deluppgift först eller sist
+   * eller null när uppgiften skulle stanna där den är.
+   */
+  function dropTarget(y) {
+    var d = state.drag;
+    var item = d.item;
+    var lis = Array.prototype.slice.call(el.openList.children);
+    if (!lis.length) return null;
+
+    for (var i = 0; i < lis.length; i++) {
+      var li = lis[i];
+      var task = findTask(Number(li.dataset.id));
+      var r = li.getBoundingClientRect();
+      if (y < r.top) {
+        // Ovanför första uppgiften (eller i en glipa): före den här.
+        return task === item ? null : { type: 'before', task: task };
+      }
+      if (y >= r.bottom) continue;
+
+      var subLis = shownSubLis(li);
+      var zoneBottom = subLis.length ? subLis[0].getBoundingClientRect().top : r.bottom;
+      if (y < zoneBottom) {
+        // Över själva uppgiften.
+        if (task === item) return null;
+        var f = (y - r.top) / Math.max(1, zoneBottom - r.top);
+        if (d.canNest) {
+          if (f < 0.3) return { type: 'before', task: task };
+          if (f > 0.7) return subLis.length ? { type: 'nest-start', parent: task } : { type: 'after', task: task };
+          return { type: 'nest-end', parent: task };
+        }
+        return { type: f < 0.5 ? 'before' : 'after', task: task };
+      }
+
+      // Bland uppgiftens deluppgifter.
+      if (task === item) return null;
+      if (!d.canNest) return { type: 'after', task: task };
+      for (var j = 0; j < subLis.length; j++) {
+        var sr = subLis[j].getBoundingClientRect();
+        if (y >= sr.bottom) continue;
+        var sub = findTask(Number(subLis[j].dataset.id));
+        if (sub === item) return null;
+        // Klara deluppgifter står alltid sist; en ny hamnar före dem.
+        if (sub.done) return { type: 'nest-end', parent: task };
+        return { type: y < (sr.top + sr.bottom) / 2 ? 'sub-before' : 'sub-after', parent: task, sub: sub };
+      }
+      return { type: 'nest-end', parent: task };
+    }
+    // Nedanför sista uppgiften.
+    var lastTask = findTask(Number(lis[lis.length - 1].dataset.id));
+    return lastTask === item ? null : { type: 'after', task: lastTask };
+  }
+
+  /** Strecket där uppgiften hamnar, och ram runt uppgiften den blir deluppgift i. */
+  function showDropTarget(target) {
+    var d = state.drag;
+    var line = el.dropLine;
+    var into = target && (target.type === 'nest-start' || target.type === 'nest-end' ||
+      target.type === 'sub-before' || target.type === 'sub-after') ? liFor(target.parent) : null;
+    if (d.intoLi !== into) {
+      if (d.intoLi) d.intoLi.classList.remove('drop-into');
+      if (into) into.classList.add('drop-into');
+      d.intoLi = into;
+    }
+    if (!target) {
+      line.hidden = true;
+      return;
+    }
+    var y, left;
+    var lists = el.lists.getBoundingClientRect();
+    if (target.type === 'before' || target.type === 'after') {
+      var r = liFor(target.task).getBoundingClientRect();
+      y = target.type === 'before' ? r.top : r.bottom;
+      left = lists.left + 8;
+    } else {
+      var pli = liFor(target.parent);
+      var pr = pli.getBoundingClientRect();
+      var ul = pli.querySelector('.subtasks');
+      left = pr.left + (parseFloat(getComputedStyle(ul).paddingLeft) || 40);
+      var subLis = shownSubLis(pli).filter(function (x) { return x !== d.li; });
+      if (target.type === 'sub-before' || target.type === 'sub-after') {
+        var sr = liFor(target.sub).getBoundingClientRect();
+        y = target.type === 'sub-before' ? sr.top : sr.bottom;
+      } else if (target.type === 'nest-start') {
+        y = subLis.length ? subLis[0].getBoundingClientRect().top : pr.bottom;
+      } else {
+        // Efter sista ej klara deluppgiften, före de klara.
+        var open = subLis.filter(function (x) { return !x.classList.contains('is-done'); });
+        var firstDone = subLis.filter(function (x) { return x.classList.contains('is-done'); })[0];
+        if (open.length) y = open[open.length - 1].getBoundingClientRect().bottom;
+        else if (firstDone) y = firstDone.getBoundingClientRect().top;
+        else y = pr.bottom - 8;
+      }
+    }
+    line.hidden = false;
+    line.classList.toggle('nest', Boolean(into));
+    // Inte ovanför listans överkant, där strecket skulle kapas.
+    line.style.top = Math.max(4, y - lists.top + el.lists.scrollTop - 1.5) + 'px';
+    line.style.left = (left - lists.left) + 'px';
+  }
+
+  /** Skrollar listan när man drar nära över- eller underkanten. */
+  function autoScroll() {
+    var d = state.drag;
+    if (!d || !d.started) return;
+    var rect = el.lists.getBoundingClientRect();
+    var speed = 0;
+    if (d.lastY < rect.top + AUTOSCROLL_EDGE) {
+      speed = -AUTOSCROLL_SPEED * Math.min(1, (rect.top + AUTOSCROLL_EDGE - d.lastY) / AUTOSCROLL_EDGE);
+    } else if (d.lastY > rect.bottom - AUTOSCROLL_EDGE) {
+      speed = AUTOSCROLL_SPEED * Math.min(1, (d.lastY - rect.bottom + AUTOSCROLL_EDGE) / AUTOSCROLL_EDGE);
+    }
+    if (speed) {
+      var before = el.lists.scrollTop;
+      el.lists.scrollTop = before + speed;
+      if (el.lists.scrollTop !== before) updateDrag();
+    }
+    d.raf = requestAnimationFrame(autoScroll);
+  }
+
+  function finishDrag(event, cancelled) {
+    var d = state.drag;
+    if (!d || (event && event.pointerId !== d.pointerId)) return;
+    var started = d.started;
+    var target = d.target;
+    cleanupDrag();
+    if (!started) return;
+    suppressClickUntil = Date.now() + 400;
+    if (!cancelled && target) moveTask(d.item, target);
+    else render();
+  }
+
+  /** Tar bort allt som hör till draget (utan att rita om). */
+  function cleanupDrag() {
+    var d = state.drag;
+    if (!d) return;
+    state.drag = null;
+    cancelAnimationFrame(d.raf);
+    try { d.handle.releasePointerCapture(d.pointerId); } catch (e) { /* redan släppt */ }
+    document.body.classList.remove('is-dragging');
+    d.li.classList.remove('drag-source');
+    if (d.intoLi) d.intoLi.classList.remove('drop-into');
+    if (d.ghost) d.ghost.remove();
+    el.dropLine.hidden = true;
+  }
+
+  /** Syns uppgiften där den står nu (med filtret som är valt)? */
+  function isShown(item) {
+    var parent = findParent(item.id);
+    if (!parent) return isVisible(item);
+    return isVisible(parent) && visibleSubs(parent).indexOf(item) >= 0;
+  }
+
+  /** Flyttar uppgiften (eller deluppgiften) till målet och sparar. */
+  function moveTask(item, target) {
+    var before = C.serializeDocument(doc());
+    var oldParent = findParent(item.id);
+    var newParent = null;
+
+    if (oldParent) oldParent.subtasks.splice(oldParent.subtasks.indexOf(item), 1);
+    else state.tasks.splice(state.tasks.indexOf(item), 1);
+
+    if (target.type === 'before' || target.type === 'after') {
+      if (!item.subtasks) item.subtasks = [];
+      var i = state.tasks.indexOf(target.task);
+      state.tasks.splice(target.type === 'before' ? i : i + 1, 0, item);
+    } else {
+      newParent = target.parent;
+      delete item.subtasks;
+      var subs = newParent.subtasks;
+      var j = subs.length;
+      if (target.type === 'sub-before') j = subs.indexOf(target.sub);
+      else if (target.type === 'sub-after') j = subs.indexOf(target.sub) + 1;
+      else if (target.type === 'nest-start') j = 0;
+      subs.splice(j, 0, item);
+    }
+
+    // Med ett filter valt ska uppgiften inte försvinna ur vyn: syns den inte på sin nya plats
+    // får den filtrets person, som en ny uppgift.
+    if (state.filter && !isShown(item)) item.who = state.filter;
+
+    var today = C.today();
+    if (oldParent && oldParent !== newParent) C.syncParent(oldParent, today);
+    if (newParent) C.syncParent(newParent, today);
+
+    if (C.serializeDocument(doc()) !== before) save();
+    render();
+  }
+
+  // Tangentbord: pilarna flyttar uppgiften när greppet har fokus.
+  el.openList.addEventListener('keydown', function (event) {
+    var key = event.key;
+    if (key !== 'ArrowUp' && key !== 'ArrowDown' && key !== 'ArrowLeft' && key !== 'ArrowRight') return;
+    var handle = event.target.closest && event.target.closest('.drag-handle');
+    if (!handle || state.drag || state.locked) return;
+    event.preventDefault();
+    var item = findTask(Number(handle.closest('.task').dataset.id));
+    if (!item) return;
+    var parent = findParent(item.id);
+    var target = null;
+
+    if (parent) {
+      var subs = visibleSubs(parent).filter(function (s) { return !s.done; });
+      var k = subs.indexOf(item);
+      if (key === 'ArrowUp' && k > 0) target = { type: 'sub-before', parent: parent, sub: subs[k - 1] };
+      if (key === 'ArrowDown' && k < subs.length - 1) target = { type: 'sub-after', parent: parent, sub: subs[k + 1] };
+      if (key === 'ArrowLeft') target = { type: 'after', task: parent };
+    } else {
+      var open = state.openOrder;
+      var n = open.indexOf(item);
+      if (key === 'ArrowUp' && n > 0) target = { type: 'before', task: open[n - 1] };
+      if (key === 'ArrowDown' && n >= 0 && n < open.length - 1) target = { type: 'after', task: open[n + 1] };
+      if (key === 'ArrowRight' && n > 0 && !(item.subtasks && item.subtasks.length)) {
+        target = { type: 'nest-end', parent: open[n - 1] };
+      }
+    }
+    if (!target) return;
+    state.expandedId = null;
+    moveTask(item, target);
+    var moved = el.openList.querySelector('.task[data-id="' + item.id + '"] > .row .drag-handle');
+    if (moved && !moved.hidden) moved.focus();
+  });
+
   // ---------- Rendering ----------
 
   // ---------- Filter per person ----------
@@ -720,6 +1068,8 @@
   }
 
   function render() {
+    // Listan ritas om: ett pågående drag släpps (t.ex. när anteckningen ändras utifrån).
+    cleanupDrag();
     // Ett sparat filter för en person som inte finns i den här listan gäller inte.
     if (state.note && state.filter && state.people.indexOf(state.filter) < 0) {
       state.filter = null;
@@ -729,6 +1079,10 @@
     var open = visible.filter(function (t) { return !isDoneInView(t); });
     var done = visible.filter(isDoneInView);
     var hasNote = Boolean(state.note);
+    state.openOrder = open;
+    // Greppen syns när det finns något att flytta: två uppgifter, eller en med deluppgifter.
+    state.sortable = hasNote && !state.locked && (open.length > 1 ||
+      (open.length === 1 && visibleSubs(open[0]).some(function (s) { return !s.done; })));
 
     renderFilters();
     renderPeoplePanel();
@@ -778,6 +1132,7 @@
     body.disabled = state.locked || doneInView;
     li.querySelector('.title').textContent = task.title;
     renderMeta(li.querySelector('.meta'), task);
+    li.querySelector('.drag-handle').hidden = !state.sortable || doneInView;
 
     var expanded = state.expandedId === task.id && !doneInView && !state.locked;
     showNote(li, task);
@@ -829,6 +1184,7 @@
     body.disabled = state.locked || sub.done;
     li.querySelector('.title').textContent = sub.title;
     renderMeta(li.querySelector('.meta'), sub);
+    li.querySelector('.drag-handle').hidden = !state.sortable || sub.done;
 
     var expanded = state.expandedId === sub.id && !sub.done && !state.locked;
     body.setAttribute('aria-expanded', String(expanded));
