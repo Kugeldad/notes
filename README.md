@@ -74,7 +74,11 @@ Håll koll på beställningar. En anteckning kan hålla flera beställningar fr�
 - **Ta bort beställning** frågar en gång till (*Tryck igen för att ta bort*). En tom beställning tas bort direkt.
 - Varor: **Lägg till vara** ger en ny rad, och Enter på en vara med text gör samma sak. Enter på en tom rad
   går vidare till Fraktbolag. Krysset tar bort varan. Tomma rader sparas inte.
-- **Trackingnummer** står under Fraktbolag, i fast teckenbredd så att det är lätt att läsa av.
+- **Trackingnummer** står under Fraktbolag, i fast teckenbredd så att det är lätt att läsa av. När det finns ett
+  nummer visas **Spåra hos …** under fältet. Länken går till fraktbolagets egen spårningssida för PostNord, DHL,
+  Bring, UPS och FedEx (fraktbolaget känns igen på det som står i Fraktbolag), annars till 17TRACK, som känner
+  igen de flesta fraktbolag på numret. Bredvid en fraktbolagslänk finns 17TRACK som reserv. Mellanslag i numret
+  tas bort i länken. Länken öppnas i ett nytt fönster; i Mac-appen öppnas den i den vanliga webbläsaren.
 - **Kommentar** står sist och kan ha flera rader; fältet växer med texten. Första raden syns kursivt i den
   ihopfällda raden i listan.
 - **Redo att hämtas:** fyll i datumet (eller tryck **Idag**) när paketet har kommit till en box eller ett

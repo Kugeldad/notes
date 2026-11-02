@@ -425,6 +425,25 @@ button, input { font: inherit; color: inherit; }
   letter-spacing: 0.02em;
 }
 
+/* Spåra-länkarna under trackingnumret. */
+.track-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+.track-link,
+.track-alt {
+  padding: 4px 0;
+  text-decoration: none;
+}
+
+.track-link { color: var(--accent); font-weight: 600; font-size: 0.9em; }
+.track-alt { color: var(--muted); font-size: 0.8em; }
+.track-link:hover,
+.track-alt:hover { text-decoration: underline; }
+
 /* Tomt datumfält: gör platshållaren lika dämpad som i textfälten. */
 .field input[type="date"].empty { color: var(--muted); }
 

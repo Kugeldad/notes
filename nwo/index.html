@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>NWO (jagemyr)</title>
-  <link rel="stylesheet" href="nwo.css?v=2.7.0">
+  <link rel="stylesheet" href="nwo.css?v=2.8.0">
 </head>
 <body>
   <main class="page">
@@ -94,10 +94,14 @@
           <div class="carriers"></div>
         </div>
 
-        <label class="field">
+        <div class="field">
           <span>Trackingnummer</span>
-          <input type="text" class="tracking" data-key="tracking" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="next">
-        </label>
+          <input type="text" class="tracking" data-key="tracking" aria-label="Trackingnummer" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="next">
+          <div class="track-links" hidden>
+            <a class="track-link" target="_blank" rel="noopener noreferrer"></a>
+            <a class="track-alt" target="_blank" rel="noopener noreferrer" title="Spåra hos 17TRACK, som känner igen de flesta fraktbolag">17TRACK</a>
+          </div>
+        </div>
 
         <div class="field" data-date-field="bestalld">
           <span>Beställd</span>
@@ -178,7 +182,7 @@
     </li>
   </template>
 
-  <script src="vendor/component-relay.js?v=2.7.0"></script>
-  <script src="nwo.js?v=2.7.0"></script>
+  <script src="vendor/component-relay.js?v=2.8.0"></script>
+  <script src="nwo.js?v=2.8.0"></script>
 </body>
 </html>

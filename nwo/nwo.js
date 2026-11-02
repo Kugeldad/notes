@@ -26,7 +26,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '2.7.0';
+  var VERSION = '2.8.0';
   var NOT_CONNECTED_HINT_MS = 2500;
   var CONFIRM_MS = 3000;
   var SETTLE_MS = 700;
@@ -40,6 +40,17 @@
 
   // Förslag under Fraktbolag. Egna knappar i stället för <datalist>: Safaris förslagsfönster
   // öppnas mitt i tangenttrycket och kan få tangenten att upprepas (PPPP…).
+  // Spåra-länken: fraktbolagets egen spårningssida när den är känd, annars 17TRACK, som känner
+  // igen de flesta fraktbolag på numret. Fraktbolaget matchas mot det som står i Fraktbolag.
+  var TRACKERS = [
+    { match: /postnord|posten/i, name: 'PostNord', url: 'https://www.postnord.se/vara-verktyg/spara-brev-paket-och-pall?shipmentId=' },
+    { match: /\bdhl\b/i, name: 'DHL', url: 'https://www.dhl.com/se-sv/home/tracking.html?submit=1&tracking-id=' },
+    { match: /\bbring\b/i, name: 'Bring', url: 'https://tracking.bring.com/tracking.html?lang=sv&q=' },
+    { match: /\bups\b/i, name: 'UPS', url: 'https://www.ups.com/track?loc=en_US&tracknum=' },
+    { match: /fedex/i, name: 'FedEx', url: 'https://www.fedex.com/fedextrack/?trknbr=' }
+  ];
+  var UNIVERSAL_TRACKER = { name: '17TRACK', url: 'https://t.17track.net/en#nums=' };
+
   var CARRIERS = ['PostNord', 'DHL', 'Budbee', 'Instabox', 'Bring', 'DB Schenker', 'UPS', 'FedEx', 'Airmee', 'Early Bird'];
 
   // Ordningen här är ordningen i anteckningen. Alias gör att rader skrivna för hand också känns igen.
@@ -654,6 +665,7 @@
         renderDateBlock(card.querySelector('[data-date-field="' + key + '"]'), order, true);
       }
       if (key === 'fraktbolag') renderCarriers(card, order, true);
+      if (key === 'fraktbolag' || key === 'tracking') renderTrackLinks(card, order);
       if (input.tagName === 'TEXTAREA') autoGrow(input);
     }
     renderSummary(card, order, true);
@@ -1256,6 +1268,7 @@
 
     renderItems(card, order, canEdit);
     renderCarriers(card, order, canEdit);
+    renderTrackLinks(card, order);
     Array.prototype.forEach.call(card.querySelectorAll('[data-date-field]'), function (block) {
       renderDateBlock(block, order, canEdit);
     });
@@ -1401,6 +1414,25 @@
   }
 
   /** Förslag på fraktbolag: alla när fältet är tomt, annars de som börjar på det man skrivit. */
+  /** Spåra-länkarna: fraktbolagets sida (om den är känd) och 17TRACK. Syns när det finns ett nummer. */
+  function renderTrackLinks(card, order) {
+    var box = card.querySelector('.track-links');
+    // Mellanslag följer ofta med när man kopierar ett nummer; de ska inte med i länken.
+    var number = oneLine(order.values.tracking).replace(/\s+/g, '');
+    box.hidden = !number;
+    if (!number) return;
+    var carrier = oneLine(order.values.fraktbolag);
+    var tracker = TRACKERS.filter(function (t) { return t.match.test(carrier); })[0];
+    var main = box.querySelector('.track-link');
+    var alt = box.querySelector('.track-alt');
+    var primary = tracker || UNIVERSAL_TRACKER;
+    main.textContent = 'Spåra hos ' + primary.name + ' ↗';
+    main.href = primary.url + encodeURIComponent(number);
+    // 17TRACK som reserv bredvid fraktbolagets egen länk.
+    alt.hidden = !tracker;
+    alt.href = UNIVERSAL_TRACKER.url + encodeURIComponent(number);
+  }
+
   function renderCarriers(card, order, canEdit) {
     var box = card.querySelector('.carriers');
     var typed = oneLine(order.values.fraktbolag).toLowerCase();
