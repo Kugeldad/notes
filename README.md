@@ -15,7 +15,8 @@ Egna plugins till [Standard Notes](https://standardnotes.com), publicerade med G
 ## Todo
 
 - Avbockade uppgifter stryks över och samlas under **Klara** längst ner.
-- Välj vem uppgiften gäller. Knapparna överst filtrerar listan per person, och filtret sparas per enhet.
+- Välj vem uppgiften gäller. Knapparna överst filtrerar listan per person, och filtret sparas per enhet
+  (se *Inställningar per enhet* nedan).
   Nya uppgifter får den person som är vald i filtret.
 - **Alla** i Vem-listan betyder hela familjen: uppgiften syns i allas filter och den som gör den bockar av den för alla.
 - Personerna heter Pappa, Mamma, Dotter och Son från början. Pennan sist i raden byter namn,
@@ -33,6 +34,15 @@ Egna plugins till [Standard Notes](https://standardnotes.com), publicerade med G
   En återkommande huvuduppgift nollställer sina deluppgifter när den kommer tillbaka.
 - **Noteringar:** tryck på en uppgift eller deluppgift och skriv i fältet Notering. Noteringen visas under
   uppgiften och sparas som rader som börjar med `>`.
+- **E-ink-läge:** knappen **E-ink** bredvid versionen längst ner gör pluginet svart och vitt för e-ink-skärmar
+  (som i Te och NWO): svarta ramar, vita fält, inga animationer eller genomskinlighet. Personfärgerna försvinner
+  och namnet står i fetstil i stället, den valda personen i filtret står inverterad och försenade datum stryks under.
+  Valet gäller den här enheten. Utan val slås läget på av sig självt på svartvita skärmar och Mudita-telefoner.
+- **Inställningar per enhet** (filtret och e-ink) sparas i localStorage och också i pluginets data i Standard Notes,
+  under en nyckel för enheten (modell och skärmstorlek). Standard Notes på telefonen tömmer pluginets localStorage
+  när anteckningen öppnas; valen läses då därifrån i stället.
+- **Smal skärm:** under 400 px bredd blir marginalerna mindre, och under 360 px står Vem, Upprepas och Datum under
+  varandra så att valen inte kortas av.
 
 Uppgifterna sparas som vanlig text i anteckningen, en per rad, så de går att läsa även i andra editorer:
 

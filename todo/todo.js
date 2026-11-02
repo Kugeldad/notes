@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.5.1';
+  var VERSION = '1.6.0';
   var C = window.TodoCore;
   var COMPLETE_ANIMATION_MS = 350;
   var CONFIRM_MS = 3000;
@@ -36,11 +36,76 @@
     peopleList: document.getElementById('people-list'),
     peopleDone: document.getElementById('people-done'),
     addPersonForm: document.getElementById('add-person'),
-    newPerson: document.getElementById('new-person')
+    newPerson: document.getElementById('new-person'),
+    einkToggle: document.getElementById('eink-toggle')
   };
 
   // Filtret sparas per enhet, så att t.ex. dotterns telefon kan visa bara hennes uppgifter.
   var FILTER_KEY = 'se.jagemyr.todo.filter';
+
+  // ---------- Inställningar per enhet (som i Te och NWO) ----------
+  //
+  // Filter och e-ink-läge sparas per enhet. I Standard Notes på telefonen kan pluginets
+  // localStorage tömmas varje gång anteckningen öppnas, så valen sparas också i pluginets
+  // data i Standard Notes, under en nyckel för just den här enheten. Ett val på telefonen
+  // påverkar då inte datorn, och tvärtom.
+
+  var PREFS_KEY = 'devicePrefs';
+  var DEVICE = deviceKey();
+
+  /** "Linux; Android 14; Kompakt; wv 480x800": modell och skärm, utan versionsnummer. */
+  function deviceKey() {
+    var ua = navigator.userAgent || '';
+    var m = /\(([^)]*)\)/.exec(ua);
+    var model = (m ? m[1] : ua.slice(0, 80))
+      .replace(/Build\/[^;)]*/g, '')
+      .replace(/\d+(?:[._]\d+)+/g, '')
+      .replace(/\s*;\s*/g, '; ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    var w = 0, h = 0;
+    try { w = Math.min(screen.width, screen.height); h = Math.max(screen.width, screen.height); } catch (e) { /* okänt */ }
+    return model + ' ' + w + 'x' + h;
+  }
+
+  /** Den här enhetens inställningar i pluginets data i Standard Notes (före anslutning: inga). */
+  function devicePrefs() {
+    try {
+      var all = relay && relay.getComponentDataValueForKey(PREFS_KEY);
+      return (all && all[DEVICE]) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function loadPref(key) {
+    var local = null;
+    try { local = window.localStorage.getItem(key); } catch (e) { /* ingen lagring */ }
+    if (local !== null) return local;
+    var saved = devicePrefs()[key];
+    return saved === undefined ? null : saved;
+  }
+
+  function storePref(key, value) {
+    try {
+      if (value) window.localStorage.setItem(key, value); else window.localStorage.removeItem(key);
+    } catch (e) {
+      // Ingen lagring här; Standard Notes sparar nedan.
+    }
+    try {
+      if (!relay || !state.connected) return;
+      var all = {};
+      var current = relay.getComponentDataValueForKey(PREFS_KEY) || {};
+      Object.keys(current).forEach(function (k) { all[k] = current[k]; });
+      var mine = {};
+      Object.keys(all[DEVICE] || {}).forEach(function (k) { mine[k] = all[DEVICE][k]; });
+      if (value) mine[key] = value; else delete mine[key];
+      all[DEVICE] = mine;
+      relay.setComponentDataValueForKey(PREFS_KEY, all);
+    } catch (e) {
+      // Kan inte spara i Standard Notes; valet gäller tills editorn stängs.
+    }
+  }
 
   var state = {
     tasks: [],
@@ -57,20 +122,11 @@
   };
 
   function loadFilter() {
-    try {
-      return window.localStorage.getItem(FILTER_KEY) || null;
-    } catch (e) {
-      return null;
-    }
+    return loadPref(FILTER_KEY) || null;
   }
 
   function storeFilter(v) {
-    try {
-      if (v) window.localStorage.setItem(FILTER_KEY, v);
-      else window.localStorage.removeItem(FILTER_KEY);
-    } catch (e) {
-      // Ingen lagring tillgänglig: filtret gäller bara tills editorn stängs.
-    }
+    storePref(FILTER_KEY, v);
   }
 
   function personClass(name) {
@@ -144,6 +200,36 @@
   // Versionen längst ner till höger, så att man ser vilken version varje enhet kör.
   document.getElementById('version').textContent = 'v' + VERSION;
 
+  // ---------- E-ink-läge ----------
+  //
+  // Svart och vitt, ramar i stället för färger och tonade bakgrunder, inga animationer.
+  // Personfärgerna försvinner (namnen står ändå i text), försenat stryks under och den
+  // valda personen står inverterad. Väljs per enhet med knappen i statusraden; utan val slås
+  // det på av sig självt på svartvita skärmar och Mudita-telefoner.
+
+  var EINK_KEY = 'se.jagemyr.todo.eink';
+
+  function applyEink(on) {
+    document.documentElement.classList.toggle('eink', on);
+    el.einkToggle.setAttribute('aria-pressed', String(on));
+  }
+
+  /** Sparat val, annars på för svartvita skärmar och Mudita-telefoner. */
+  function initEink() {
+    var stored = loadPref(EINK_KEY);
+    var auto = /Mudita|Kompakt/i.test(navigator.userAgent || '');
+    try { auto = auto || window.matchMedia('(monochrome)').matches; } catch (e) { /* okänt */ }
+    applyEink(stored === '1' || (stored === null && auto));
+  }
+
+  initEink();
+
+  el.einkToggle.addEventListener('click', function () {
+    var on = !document.documentElement.classList.contains('eink');
+    storePref(EINK_KEY, on ? '1' : '0');
+    applyEink(on);
+  });
+
   var relay = new ComponentRelay({
     targetWindow: window,
     options: { coallesedSaving: true, coallesedSavingDelay: 250 },
@@ -151,6 +237,15 @@
       state.connected = true;
       el.notice.hidden = true;
       setSaveState('', '');
+      // Pluginets data kan saknas första gången; då börjar den tom.
+      try { if (!relay.component.data) relay.component.data = {}; } catch (e) { /* okänt */ }
+      // Nu finns pluginets data: läs e-ink-valet och filtret därifrån om localStorage var tomt.
+      initEink();
+      var filter = loadFilter();
+      if (filter !== state.filter) {
+        state.filter = filter;
+        render();
+      }
     }
   });
 
