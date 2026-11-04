@@ -114,7 +114,10 @@ Håll koll på beställningar. En anteckning kan hålla flera beställningar fr�
   nummer visas **Spåra hos …** under fältet. Länken går till fraktbolagets egen spårningssida för PostNord, DHL,
   Bring, UPS och FedEx (fraktbolaget känns igen på det som står i Fraktbolag), annars till 17TRACK, som känner
   igen de flesta fraktbolag på numret. Bredvid en fraktbolagslänk finns 17TRACK som reserv. Mellanslag i numret
-  tas bort i länken. Länken öppnas i ett nytt fönster; i Mac-appen öppnas den i den vanliga webbläsaren.
+  tas bort i länken. I apparna (dator och telefon) öppnas länken i den vanliga webbläsaren: den byter hela
+  fönstret (`_top`), som Standard Notes skickar vidare till webbläsaren. Ett nytt fönster (`_blank`) kan i
+  telefonappen öppnas inne i appen med pluginets sandlåda, och där kraschar 17TRACK. I Standard Notes i en
+  webbläsare öppnas länken i ett nytt fönster.
 - **Kommentar** står sist och kan ha flera rader; fältet växer med texten. Första raden syns kursivt i den
   ihopfällda raden i listan.
 - **Redo att hämtas:** fyll i datumet (eller tryck **Idag**) när paketet har kommit till en box eller ett

@@ -26,7 +26,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '2.9.0';
+  var VERSION = '2.9.1';
   var NOT_CONNECTED_HINT_MS = 2500;
   var CONFIRM_MS = 3000;
   var SETTLE_MS = 700;
@@ -50,6 +50,27 @@
     { match: /fedex/i, name: 'FedEx', url: 'https://www.fedex.com/fedextrack/?trknbr=' }
   ];
   var UNIVERSAL_TRACKER = { name: '17TRACK', url: 'https://t.17track.net/en#nums=' };
+
+  // Hur länkar ut från pluginet öppnas. I apparna (dator och telefon) öppnar Standard Notes en
+  // länk som byter hela fönstret (_top) i den vanliga webbläsaren. Ett nytt fönster (_blank)
+  // kan däremot öppnas inne i appen med pluginets sandlåda, och där kraschar sidor som
+  // 17TRACK som behöver webbläsarens lagring. I Standard Notes i en webbläsare skulle _top
+  // lämna Standard Notes, så där används ett nytt fönster. Apparna laddas från file://,
+  // webbversionen från https://.
+  var LINK_TARGET = linkTarget();
+
+  function linkTarget() {
+    if (window.parent === window) return '_blank';
+    var parentOrigin = '';
+    try {
+      var ancestors = window.location.ancestorOrigins;
+      if (ancestors && ancestors.length) parentOrigin = ancestors[ancestors.length - 1];
+    } catch (e) { /* stöds inte */ }
+    if (!parentOrigin) {
+      try { parentOrigin = document.referrer ? new URL(document.referrer).origin : ''; } catch (e) { /* ogiltig */ }
+    }
+    return /^https?:/i.test(parentOrigin) ? '_blank' : '_top';
+  }
 
   var CARRIERS = ['PostNord', 'DHL', 'Budbee', 'Instabox', 'Bring', 'DB Schenker', 'UPS', 'FedEx', 'Airmee', 'Early Bird'];
 
@@ -1525,6 +1546,8 @@
     var main = box.querySelector('.track-link');
     var alt = box.querySelector('.track-alt');
     var primary = tracker || UNIVERSAL_TRACKER;
+    main.target = LINK_TARGET;
+    alt.target = LINK_TARGET;
     main.textContent = 'Spåra hos ' + primary.name + ' ↗';
     main.href = primary.url + encodeURIComponent(number);
     // 17TRACK som reserv bredvid fraktbolagets egen länk.
