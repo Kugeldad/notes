@@ -1,13 +1,13 @@
 {
   "identifier": "se.jagemyr.todo",
-  "name": "Todo (jagemyr)",
+  "name": "Todo (kugeldad)",
   "content_type": "SN|Component",
   "area": "editor-editor",
   "version": "1.7.0",
   "description": "Att göra-lista för familjen: deluppgifter, välj vem uppgiften gäller och filtrera per person, avbockade uppgifter stryks över och uppgifter kan återkomma. Dra och släpp för att sortera och göra uppgifter till deluppgifter. Med e-ink-läge för e-ink-skärmar. Egna namn sparas i anteckningen.",
-  "url": "https://jagemyr.github.io/notes/todo/index.html?v=1.7.0",
-  "latest_url": "https://jagemyr.github.io/notes/todo/ext.json",
-  "marketing_url": "https://github.com/jagemyr/notes",
+  "url": "https://kugeldad.github.io/notes/todo/index.html?v=1.7.0",
+  "latest_url": "https://kugeldad.github.io/notes/todo/ext.json",
+  "marketing_url": "https://github.com/kugeldad/notes",
   "note_type": "task",
   "file_type": "md",
   "interchangeable": false

@@ -1,5 +1,5 @@
 /*
- * NWO (jagemyr) – beställningar i Standard Notes. En anteckning kan hålla flera
+ * NWO (kugeldad) – beställningar i Standard Notes. En anteckning kan hålla flera
  * beställningar, var och en med Företag, en eller flera Varor, Fraktbolag, Beställd,
  * Skickad, Bedömt levdatum och Levererad.
  *

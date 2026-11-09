@@ -1,5 +1,5 @@
 /*
- * Todo (jagemyr) – gränssnittet. All logik för text, datum och upprepning finns i core.js.
+ * Todo (kugeldad) – gränssnittet. All logik för text, datum och upprepning finns i core.js.
  *
  * - Avbockade uppgifter stryks över och flyttas till "Klara" längst ner.
  * - Återkommande uppgifter står överstrukna tills nästa datum och kommer då tillbaka oavbockade.

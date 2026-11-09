@@ -1,16 +1,21 @@
 # Standard Notes-plugins
 
 Egna plugins till [Standard Notes](https://standardnotes.com), publicerade med GitHub Pages på
-<https://jagemyr.github.io/notes/>.
+<https://kugeldad.github.io/notes/>.
 
 ## Plugins
 
 | Plugin | Typ | Installationsadress |
 |---|---|---|
-| Todo | Editor | `https://jagemyr.github.io/notes/todo/ext.json` |
-| NWO | Editor | `https://jagemyr.github.io/notes/nwo/ext.json` |
-| Te | Editor | `https://jagemyr.github.io/notes/te/ext.json` |
-| Testeditor | Editor | `https://jagemyr.github.io/notes/test-editor/ext.json` |
+| Todo | Editor | `https://kugeldad.github.io/notes/todo/ext.json` |
+| NWO | Editor | `https://kugeldad.github.io/notes/nwo/ext.json` |
+| Te | Editor | `https://kugeldad.github.io/notes/te/ext.json` |
+| Testeditor | Editor | `https://kugeldad.github.io/notes/test-editor/ext.json` |
+
+**Ny adress (november 2026):** GitHub-kontot bytte namn, och GitHub Pages flyttar inte med till det nya namnet.
+Plugins installerade från den gamla adressen (`jagemyr.github.io`) laddas inte längre och behöver installeras om
+från adresserna ovan. Identifierarna (`se.jagemyr.…`) är oförändrade, så anteckningarna öppnas i rätt plugin igen,
+och nycklarna för sparade inställningar och Te-appens paketnamn är också desamma.
 
 ## Todo
 

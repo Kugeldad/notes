@@ -1,5 +1,5 @@
 /*
- * Todo (jagemyr) – logik utan gränssnitt: läsa/skriva anteckningens text,
+ * Todo (kugeldad) – logik utan gränssnitt: läsa/skriva anteckningens text,
  * datum och upprepning. Fungerar både i webbläsaren (window.TodoCore) och i Node (tester).
  *
  * Textformat, en uppgift per rad (läsbart även i vanliga editorn):

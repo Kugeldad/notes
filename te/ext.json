@@ -1,13 +1,13 @@
 {
   "identifier": "se.jagemyr.te",
-  "name": "Tea (jagemyr)",
+  "name": "Tea (kugeldad)",
   "content_type": "SN|Component",
   "area": "editor-editor",
   "version": "2.3.0",
   "description": "Teas in a list: type, name, temperature, brew time, country, shop, taste and whether the tea is good for gong fu (with a brew schedule, its own for white tea, and a timer that follows it). Mark teas that need a refill or that you haven’t tried yet. Grouped by type, with search and filters by type, gong fu, refill, tried or untried. Saved as plain text in the note.",
-  "url": "https://jagemyr.github.io/notes/te/index.html?v=2.3.0",
-  "latest_url": "https://jagemyr.github.io/notes/te/ext.json",
-  "marketing_url": "https://github.com/jagemyr/notes",
+  "url": "https://kugeldad.github.io/notes/te/index.html?v=2.3.0",
+  "latest_url": "https://kugeldad.github.io/notes/te/ext.json",
+  "marketing_url": "https://github.com/kugeldad/notes",
   "note_type": "unknown",
   "file_type": "txt",
   "interchangeable": false

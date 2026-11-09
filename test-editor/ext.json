@@ -1,13 +1,13 @@
 {
   "identifier": "se.jagemyr.test-editor",
-  "name": "Testeditor (jagemyr)",
+  "name": "Testeditor (kugeldad)",
   "content_type": "SN|Component",
   "area": "editor-editor",
   "version": "1.0.2",
   "description": "Enkel texteditor med ord- och teckenräkning. Byggd för att testa kedjan GitHub Pages → Standard Notes.",
-  "url": "https://jagemyr.github.io/notes/test-editor/index.html?v=1.0.2",
-  "latest_url": "https://jagemyr.github.io/notes/test-editor/ext.json",
-  "marketing_url": "https://github.com/jagemyr/notes",
+  "url": "https://kugeldad.github.io/notes/test-editor/index.html?v=1.0.2",
+  "latest_url": "https://kugeldad.github.io/notes/test-editor/ext.json",
+  "marketing_url": "https://github.com/kugeldad/notes",
   "note_type": "unknown",
   "file_type": "txt",
   "interchangeable": true

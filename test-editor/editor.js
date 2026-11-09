@@ -1,5 +1,5 @@
 /*
- * Testeditor (jagemyr) – en minimal editor för Standard Notes.
+ * Testeditor (kugeldad) – en minimal editor för Standard Notes.
  *
  * Flöde:
  *  1. ComponentRelay sköter handskakningen med appen (postMessage).

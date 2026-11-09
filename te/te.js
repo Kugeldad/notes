@@ -1,5 +1,5 @@
 /*
- * Tea (jagemyr) – teer i Standard Notes. En anteckning håller en lista med teer, var och
+ * Tea (kugeldad) – teer i Standard Notes. En anteckning håller en lista med teer, var och
  * ett med Type, Name, Temperature, Brew time (vanlig bryggning), Country, Shop, Taste, om
  * teet passar för gong fu och om det behöver fyllas på. Gränssnittet och texten är på
  * engelska; äldre text med svenska fältnamn, sorter, länder och smakord läses in och skrivs
